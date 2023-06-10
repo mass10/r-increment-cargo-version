@@ -1,5 +1,5 @@
 //!
-//!
+//! Application entrypoint.
 //!
 
 /// macro: print info text.
@@ -59,6 +59,10 @@ fn matches(string_value: &str, expression: &str) -> Result<Vec<String>, Box<dyn 
 	return Ok(result);
 }
 
+/// Increment build number in version string. (0.0.1 >> 0.0.2)
+///
+/// # Arguments
+/// * `version` - Version string. (#.#.#)
 fn increment_build_number(version: &str) -> Result<String, Box<dyn std::error::Error>> {
 	let result = matches(version, r#"(\d+)\.(\d+)\.(\d+)"#)?;
 	if result.len() != 3 {
@@ -78,6 +82,7 @@ fn increment_build_number(version: &str) -> Result<String, Box<dyn std::error::E
 	return Ok(result);
 }
 
+/// Get version string in text. "#.#.#"
 fn read_version_string(line: &str) -> Result<String, Box<dyn std::error::Error>> {
 	// Check the line.
 	if !is_version_line(line) {
@@ -97,15 +102,23 @@ fn read_version_string(line: &str) -> Result<String, Box<dyn std::error::Error>>
 	return Ok(version_string);
 }
 
+/// Check if the line is a version line.
 fn is_version_line(line: &str) -> bool {
 	return line.trim().starts_with("version");
 }
 
+/// Convert string to quoted string.
 fn quoted(s: &str) -> String {
 	return format!("\"{}\"", s);
 }
 
-fn convert_line(line: &str, version: &str, new_version: &str) -> Result<String, Box<dyn std::error::Error>> {
+/// Carefully replace version string in text.
+///
+/// # Arguments
+/// * `line` - Line text.
+/// * `version` - Version string. (#.#.#)
+/// * `new_version` - New version string. (#.#.#)
+fn replace_string_carefully(line: &str, version: &str, new_version: &str) -> Result<String, Box<dyn std::error::Error>> {
 	let placeholder = quoted(&version);
 	let new_version = quoted(&new_version);
 	let result_string = line.replace(&placeholder, &new_version);
@@ -113,7 +126,7 @@ fn convert_line(line: &str, version: &str, new_version: &str) -> Result<String, 
 }
 
 /// Convert version string.
-fn convert_version_string(line: &str) -> Result<String, Box<dyn std::error::Error>> {
+fn update_version_string_if_needed(line: &str, new_version: &str) -> Result<String, Box<dyn std::error::Error>> {
 	// Detect version "#.#.#" string.
 	let version = read_version_string(line)?;
 	if version == "" {
@@ -121,19 +134,33 @@ fn convert_version_string(line: &str) -> Result<String, Box<dyn std::error::Erro
 		return Ok(line.to_string());
 	}
 
-	// Increment build number. (3rd field)
-	let new_version = increment_build_number(&version)?;
-
-	// Convert line.
-	let converted_line = convert_line(line, &version, &new_version)?;
+	// Replace version number carefully.
+	let converted_line = replace_string_carefully(line, &version, &new_version)?;
 
 	info!("AFFECTED LINE:\n        SRC [{}]\n        NEW [{}]", line, &converted_line);
 
 	return Ok(converted_line);
 }
 
+/// Detect version from file.
+fn detect_version_from_file(path: &str) -> Result<String, Box<dyn std::error::Error>> {
+	// Read file content.
+	let text = std::fs::read_to_string(path)?;
+
+	// Convert version line.
+	let lines = text.lines();
+	for line in lines {
+		let version = read_version_string(line)?;
+		if version != "" {
+			return Ok(version);
+		}
+	}
+
+	return Ok("".to_string());
+}
+
 /// Increment cargo version.
-fn increment_cargo_version(path: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn update_cargo_version(path: &str, version: &str) -> Result<(), Box<dyn std::error::Error>> {
 	// Read file content.
 	let text = std::fs::read_to_string(path)?;
 
@@ -141,7 +168,7 @@ fn increment_cargo_version(path: &str) -> Result<(), Box<dyn std::error::Error>>
 	let lines = text.lines();
 	let mut result_lines: Vec<String> = vec![];
 	for line in lines {
-		let line = convert_version_string(line)?;
+		let line = update_version_string_if_needed(line, version)?;
 		result_lines.push(line);
 	}
 	let content = result_lines.join("\n") + "\n";
@@ -152,8 +179,33 @@ fn increment_cargo_version(path: &str) -> Result<(), Box<dyn std::error::Error>>
 	return Ok(());
 }
 
+struct Application;
+
+impl Application {
+	pub fn run(&self) -> Result<(), Box<dyn std::error::Error>> {
+		// Detect version from Cargo.toml.
+		let version = detect_version_from_file("Cargo.toml")?;
+
+		// Increment build number. (3rd field)
+		let new_version = increment_build_number(&version)?;
+
+		// Update version in Cargo.toml.
+		update_cargo_version("Cargo.toml", &new_version)?;
+
+		// Update version in Cargo.lock.
+		update_cargo_version("Cargo.lock", &new_version)?;
+
+		return Ok(());
+	}
+}
+
 fn main() {
-	increment_cargo_version("Cargo.toml").unwrap();
+	let app = Application {};
+	let result = app.run();
+	if result.is_err() {
+		error!("{}", result.err().unwrap());
+		std::process::exit(1);
+	}
 }
 
 #[cfg(test)]
