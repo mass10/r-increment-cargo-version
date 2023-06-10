@@ -2,6 +2,11 @@
 
 Increment build number in Cargo.toml.
 
+# Note
+
+* Difficult to use in GitHub Actions.
+* It could be used in Git hooks.
+
 # Getting Started
 
 ```sh
