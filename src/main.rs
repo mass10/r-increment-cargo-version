@@ -134,20 +134,20 @@ fn convert_version_string(line: &str) -> Result<String, Box<dyn std::error::Erro
 
 /// Increment cargo version.
 fn increment_cargo_version(path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    // Read file content.
+	// Read file content.
 	let text = std::fs::read_to_string(path)?;
 
-    // Convert version line.
+	// Convert version line.
 	let lines = text.lines();
-    let mut result_lines: Vec<String> = vec![];
+	let mut result_lines: Vec<String> = vec![];
 	for line in lines {
 		let line = convert_version_string(line)?;
-        result_lines.push(line);
+		result_lines.push(line);
 	}
-    let content = result_lines.join("\n");
+	let content = result_lines.join("\n");
 
-    // Write file content.
-    std::fs::write(path, content)?;
+	// Write file content.
+	std::fs::write(path, content)?;
 
 	return Ok(());
 }
