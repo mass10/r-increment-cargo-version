@@ -144,7 +144,7 @@ fn increment_cargo_version(path: &str) -> Result<(), Box<dyn std::error::Error>>
 		let line = convert_version_string(line)?;
 		result_lines.push(line);
 	}
-	let content = result_lines.join("\n");
+	let content = result_lines.join("\n") + "\n";
 
 	// Write file content.
 	std::fs::write(path, content)?;
