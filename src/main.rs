@@ -179,6 +179,7 @@ fn update_cargo_version(path: &str, version: &str) -> Result<(), Box<dyn std::er
 	return Ok(());
 }
 
+/// Application
 struct Application;
 
 impl Application {
@@ -192,8 +193,7 @@ impl Application {
 		// Update version in Cargo.toml.
 		update_cargo_version("Cargo.toml", &new_version)?;
 
-		// Update version in Cargo.lock.
-		update_cargo_version("Cargo.lock", &new_version)?;
+		// Cannot update Cargo.lock.
 
 		return Ok(());
 	}
