@@ -199,12 +199,38 @@ impl Application {
 	}
 }
 
+/// Entrypoint of Rust application.
 fn main() {
-	let app = Application {};
-	let result = app.run();
+	let args: Vec<String> = std::env::args().skip(1).collect();
+
+	// Parse arguments.
+	let mut options = getopts::Options::new();
+	options.optflag("h", "help", "Show usage.");
+	options.optflag("v", "version", "Show version.");
+
+	let result = options.parse(args);
 	if result.is_err() {
-		error!("{}", result.err().unwrap());
+		eprint!("{}", options.usage(""));
 		std::process::exit(1);
+	}
+	let input = result.unwrap();
+
+	if input.opt_present("help") {
+		// ========== OPTIONAL: SHOW HELP ==========
+		eprintln!("{}", options.usage(""));
+	} else if input.opt_present("version") {
+		// ========== OPTIONAL: SHOW HELP ==========
+		let version = env!("CARGO_PKG_VERSION");
+		let name = env!("CARGO_PKG_NAME");
+		eprintln!("{} version {}", name, version);
+	} else {
+		// ========== DEFAULT: RUN APPLICATION ==========
+		let app = Application {};
+		let result = app.run();
+		if result.is_err() {
+			error!("{}", result.err().unwrap());
+			std::process::exit(1);
+		}
 	}
 }
 
