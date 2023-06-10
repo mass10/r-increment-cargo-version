@@ -29,7 +29,9 @@ jobs:
                 name: my-temporary-artifacts
             # DOWNLOAD CRATE
           - name: Download crate
-            run: curl https://github.com/mass10/r-gh-create-release/releases/latest/download/r-gh-create-release.exe -o r-gh-create-release.exe
+            run: Invoke-WebRequest
+                    -Uri "https://github.com/mass10/r-gh-create-release/releases/latest/download/r-gh-create-release.exe"
+                    -OutFile "r-gh-create-release.exe"
             # CREATE RELEASE AND UPLOAD EXECUTABLE FILE
           - name: release を作成して実行ファイルを公開
             run: .\r-gh-create-release.exe
