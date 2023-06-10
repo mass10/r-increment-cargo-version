@@ -11,6 +11,8 @@ Increment build number in Cargo.toml.
 
 ```sh
 wget https://github.com/mass10/r-increment-cargo-version/releases/latest/download/r-increment-cargo-version
+```
 
+```sh
 ./r-increment-cargo-version
 ```
