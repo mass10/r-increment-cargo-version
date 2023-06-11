@@ -6,6 +6,7 @@ Increment build number in Cargo.toml.
 
 * Difficult to use in GitHub Actions.
 * It could be used in Git hooks.
+* Cannot update Cargo.lock.
 
 # Requirements
 
