@@ -7,6 +7,10 @@ Increment build number in Cargo.toml.
 * Difficult to use in GitHub Actions.
 * It could be used in Git hooks.
 
+# Requirements
+
+* Just one binary must exist in Cargo.toml. The second must not.
+
 # Getting Started
 
 ```sh
